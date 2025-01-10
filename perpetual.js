@@ -215,7 +215,7 @@ const startProcess = () => {
 
     logSend(`Starting process: ${options.process_cmd}`);
     
-    runningProcess = spawn('bash', ['-c', options.process_cmd], {
+    runningProcess = spawn('bash', ['-c', `exec ${options.process_cmd}`], {
         stdio: ['inherit', 'pipe', 'pipe'],
         env: { ...process.env, FORCE_COLOR: 'true' },
     });
