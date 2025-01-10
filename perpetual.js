@@ -210,7 +210,7 @@ const sendLogsToWebhook = () => {
 const startProcess = () => {
     if (runningProcess) {
         logSend(`Stopping previous process...`);
-        runningProcess.kill('SIGINT');
+        runningProcess.kill('SIGKILL');
     };
 
     logSend(`Starting process: ${options.process_cmd}`);
