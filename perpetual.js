@@ -210,14 +210,15 @@ const sendLogsToWebhook = () => {
 const startProcess = () => {
     if (runningProcess) {
         logSend(`Stopping previous process...`);
-        runningProcess.kill('SIGKILL');
+        process.kill(-runningProcess.pid, 'SIGINT');
     };
 
     logSend(`Starting process: ${options.process_cmd}`);
     
-    runningProcess = spawn('bash', ['-c', `exec ${options.process_cmd}`], {
+    runningProcess = spawn('bash', ['-c', options.process_cmd], {
         stdio: ['inherit', 'pipe', 'pipe'],
         env: { ...process.env, FORCE_COLOR: 'true' },
+        detached: true,
     });
 
     runningProcess.stdout.on('data', (data) => {
