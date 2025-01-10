@@ -5,6 +5,7 @@ pullers: ["default"] #default: ["default"]
 # the options are the same for all, but you can configure each differently.
 default: #example
   process_cmd: "src/test.js" #dont touch unless u changed the path
+  dir: ""
 
   #daily restarts, at specified time every day
   dailyrestart_enable: true
