@@ -15,4 +15,4 @@ then customise it in `store/config.yaml`, making a new entry for every thing
 
 then run like this:
 
-- node .\perpetual.js --default
+- `node .\perpetual.js --default`

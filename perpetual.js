@@ -20,8 +20,6 @@ if (typeof fetch !== 'function') {
     process.exit(0);
 };
 
-let server_type = process.argv[2].replace("--","");
-
 let defaultconfiglocation = path.join("src", "defaultconfig.yaml");
 let configlocation = path.join("store", "config.yaml");
 
@@ -31,6 +29,8 @@ if (!fs.existsSync(configlocation)) {
 };
 
 let config = yaml.load(fs.readFileSync(configlocation, 'utf8'));
+
+let server_type = process.argv[2].replace("--","");
 
 let passed = config[server_type];
 
