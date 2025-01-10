@@ -1,0 +1,22 @@
+#which should be the ones to do pulls?
+pullers: ["default"] #default: ["default"]
+
+# config for how you want the files to continually run. setup for error notifications on discord!
+# the options are the same for all, but you can configure each differently.
+default: #example
+  process_cmd: "src/test.js" #dont touch unless u changed the path
+
+  #daily restarts, at specified time every day
+  dailyrestart_enable: true
+  dailyrestart_time: "4:00" # HH:MM (24 hours)
+  dailyrestart_quickpull: false #if true, will pull before restarting
+
+  #logfiles
+  logfile_enable: true
+
+  #webhook logging
+  webhook_url: "" #empty disables it
+  webhook_username: "Test!"
+  webhook_avatar: "https://cdn.onlypuppy7.online/legacyshell/client.png"
+  webhook_ping_user: "514778439018872842" #ENTER THE USER ID. for when there is an error. empty = no ping.
+  webhook_ping_role: "1221557010651418705" #ENTER THE ROLE ID. for when there is an error. empty = no ping.
