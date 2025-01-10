@@ -72,7 +72,7 @@ function executeCommand(command, args, stdio = "inherit") {
 
     const cmdProcess = spawn(command, args, {
         stdio,
-        cwd: dir,
+        // cwd: dir,
     });
 
     cmdProcess.on('exit', (code) => {
