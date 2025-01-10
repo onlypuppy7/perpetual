@@ -16,3 +16,7 @@ then customise it in `store/config.yaml`, making a new entry for every thing
 then run like this:
 
 - `node .\perpetual.js --default`
+
+## it doesnt work?
+
+i dont care. i use this for my own stuff. i know that it works on linux and thats all i need.
