@@ -68,11 +68,8 @@ const rl = readline.createInterface({
 });
 
 function executeCommand(command, args, stdio = "inherit") {
-    let dir = path.dirname(options.process_cmd);
-
     const cmdProcess = spawn(command, args, {
         stdio,
-        // cwd: dir,
     });
 
     cmdProcess.on('exit', (code) => {
@@ -208,10 +205,13 @@ const startProcess = () => {
     };
 
     logSend(`Starting process: ${options.process_cmd}`);
+
+    // let dir = path.dirname(options.process_cmd);
     
-    runningProcess = spawn('node', [options.process_cmd, '--perpetual'], {
+    runningProcess = spawn('bash', ['-c', options.process_cmd], {
         stdio: ['inherit', 'pipe', 'pipe'],
         env: { ...process.env, FORCE_COLOR: 'true' },
+        // cwd: dir,
     });
 
     runningProcess.stdout.on('data', (data) => {
