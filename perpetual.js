@@ -41,9 +41,11 @@ let server_type = process.argv[2].replace("--","");
 
 let passed = config[server_type];
 
+//this is bad code
 const options = {
     //process
     process_cmd:            passed.process_cmd              || "idk lol",
+    dir:                    passed.dir                      || "",
     //daily restart
     dailyrestart_enable:    passed.dailyrestart_enable      || false,
     dailyrestart_time:      passed.dailyrestart_time        || "4:00",
