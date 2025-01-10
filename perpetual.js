@@ -4,6 +4,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 //perpetual: perpetual
 import { spawn } from 'child_process';
 import readline from 'readline';
