@@ -70,6 +70,8 @@ const rl = readline.createInterface({
 function executeCommand(command, args, stdio = "inherit") {
     let dir = path.dirname(options.dir || "");
 
+    console.log(dir);
+
     const cmdProcess = spawn(command, args, {
         stdio,
         cwd: options.dir && options.dir !== "" && dir,
