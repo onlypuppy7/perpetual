@@ -12,16 +12,23 @@ import log from '#coloured-logging';
 import { getTimestamp } from '#misc';
 //
 
+let rootDir = import.meta.dirname;
 
-console.log(process.argv);
+if (!rootDir) {
+    const __filename = fileURLToPath(import.meta.url);
+    rootDir = dirname(__filename);
+    console.log("(Using fallback mechanism for rootDir)");
+};
+
+console.log(process.argv, rootDir);
 
 if (typeof fetch !== 'function') {
     console.log("This script requires the native fetch API to be available. Upgrade to the latest Node LTS.");
     process.exit(0);
 };
 
-let defaultconfiglocation = path.join("src", "defaultconfig.yaml");
-let configlocation = path.join("store", "config.yaml");
+let defaultconfiglocation = path.join(rootDir, "src", "defaultconfig.yaml");
+let configlocation = path.join(rootDir, "store", "config.yaml");
 
 if (!fs.existsSync(configlocation)) {
     fs.mkdirSync(path.dirname(configlocation), { recursive: true });
@@ -43,7 +50,7 @@ const options = {
     dailyrestart_quickpull: passed.dailyrestart_quickpull,
     //file logging
     logfile_enable:         passed.logfile_enable,
-    logfile_location:       path.join("store", "logs", server_type), //no editing kek
+    logfile_location:       path.join(rootDir, "store", "logs", server_type), //no editing kek
     //webhook logging
     webhook_url:            passed.webhook_url              || "", //false or empty is disabled
     webhook_username:       passed.webhook_username         || "Webhook", //eg "LegacyShell: Client Server"
@@ -296,7 +303,7 @@ autoRestart();
 
 // function getVersionHash() {
 //     try {
-//         var newVersionHash= fs.readFileSync(path.join(ss.rootDir, "versionHash.txt"), 'utf8').trim();
+//         var newVersionHash= fs.readFileSync(rootDir, path.join(ss.rootDir, "versionHash.txt"), 'utf8').trim();
 //         return newVersionHash;
 //     } catch (error) { //cant risk it on the perpetual script
 //         return null;
