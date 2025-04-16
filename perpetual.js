@@ -209,11 +209,16 @@ const sendLogsToWebhook = () => {
 
 const startProcess = () => {
     if (runningProcess) {
+        logSend(`Stopping previous process...`);
         try {
-            logSend(`Stopping previous process...`);
+            runningProcess.kill('SIGINT');
+        } catch (error) {
+            logSend(`Failed to stop previous process via .kill: ${error.message}`);
+        };
+        try {
             process.kill(-runningProcess.pid, 'SIGINT');
         } catch (error) {
-            logSend(`Failed to stop previous process: ${error.message}`);
+            logSend(`Failed to stop previous process via process,kill: ${error.message}`);
         };
     };
 
