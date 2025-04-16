@@ -209,8 +209,12 @@ const sendLogsToWebhook = () => {
 
 const startProcess = () => {
     if (runningProcess) {
-        logSend(`Stopping previous process...`);
-        process.kill(-runningProcess.pid, 'SIGINT');
+        try {
+            logSend(`Stopping previous process...`);
+            process.kill(-runningProcess.pid, 'SIGINT');
+        } catch (error) {
+            logSend(`Failed to stop previous process: ${error.message}`);
+        };
     };
 
     logSend(`Starting process: ${options.process_cmd}`);
@@ -239,7 +243,7 @@ const startProcess = () => {
         });
     });
 
-    runningProcess.on('exit', (code, signal) => {
+    function onExit(code, signal) {
         code = code == 57 ? 1337 : code; // 1337%256 = 57
 
         if (signal === 'SIGINT') {
@@ -253,7 +257,21 @@ const startProcess = () => {
         setTimeout(() => {
             startProcess();
         }, code == 1337 ? 1e3 : 5e3);
+    };
+
+    runningProcess.on('exit', (code, signal) => {
+        onExit(code, signal);
     });
+
+    // runningProcess.on('error', (err) => {
+    //     console.error(`Failed to start process:`, err);
+    //     onExit(1, 'SIGINT');
+    // });
+
+    // runningProcess.on('close', (code) => {
+    //     logSend(`Process closed with code ${code}.`);
+    //     onExit(code, 'SIGINT');
+    // });
 };
 
 const autoRestart = () => {
