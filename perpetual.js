@@ -226,16 +226,16 @@ const startProcess = (purposefulStop) => {
             };
         } else {
             try {
-                runningProcess.kill('SIGINT');
-                logSend(`Stopped previous process via .kill: ${runningProcess.pid}`);
-            } catch (error) {
-                logSend(`Failed to stop previous process via .kill: ${error.message} ${runningProcess}`);
-            };
-            try {
                 process.kill(-runningProcess.pid, 'SIGINT');
                 logSend(`Stopped previous process via process.kill: ${runningProcess.pid}`);
             } catch (error) {
                 logSend(`Failed to stop previous process via process.kill: ${error.message} ${runningProcess}`);
+            };
+            try {
+                runningProcess.kill('SIGINT');
+                logSend(`Stopped previous process via .kill: ${runningProcess.pid}`);
+            } catch (error) {
+                logSend(`Failed to stop previous process via .kill: ${error.message} ${runningProcess}`);
             };
         };
     } else {
