@@ -343,6 +343,7 @@ const startProcess = (purposefulStop) => {
             };
 
             runningProcess.on('exit', (code, signal) => {
+                logSend(`Process exited with code ${code}, signal ${signal}.`);
                 onExit(code, signal);
             });
         };

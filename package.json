@@ -5,7 +5,8 @@
     "description": "Run stuff FOREVER!",
     "main": "perpetual.js",
     "scripts": {
-        "start": "node perpetual.js"
+        "start": "node perpetual.js",
+        "test": "node src/test.js"
     },
     "dependencies": {
         "chalk": "^5.3.0",
