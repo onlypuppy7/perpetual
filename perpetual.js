@@ -93,10 +93,10 @@ function executeCommand(command, args, stdio = "inherit") {
 };
 
 rl.prompt();
-rl.on('line', (line) => {
+rl.on('line', async (line) => {
     let cmd = line.trim();
     if (cmd === "r" || cmd === "restart") {
-        startProcess(true);
+        await startProcess(true);
     } else if (cmd === "p" || cmd === "pull") {
         executeCommand('git', ['pull']);
     } else if (cmd === "pr") { // pull and restart
@@ -214,28 +214,28 @@ const sendLogsToWebhook = () => {
     webhookInterval = setInterval(sendLogsToWebhook, randomDelay);
 };
 
-const startProcess = (purposefulStop) => {
+const startProcess = async (purposefulStop) => {
     if (runningProcess) {
         logSend(`Stopping previous process...`);
         runningProcess.purposefulStop = purposefulStop || false;
-        if (runningProcess.terminate) {
+        if (runningProcess instanceof Worker) {
             try {
-                runningProcess.terminate();
+                await runningProcess.terminate();
             } catch (error) {
                 logSend(`Failed to stop previous process via .terminate: ${error.message} ${runningProcess}`);
             };
         } else {
             try {
-                process.kill(-runningProcess.pid, 'SIGINT');
-                logSend(`Stopped previous process via process.kill: ${runningProcess.pid}`);
-            } catch (error) {
-                logSend(`Failed to stop previous process via process.kill: ${error.message} ${runningProcess}`);
-            };
-            try {
                 runningProcess.kill('SIGINT');
                 logSend(`Stopped previous process via .kill: ${runningProcess.pid}`);
             } catch (error) {
                 logSend(`Failed to stop previous process via .kill: ${error.message} ${runningProcess}`);
+            };
+            try {
+                process.kill(-runningProcess.pid, 'SIGINT');
+                logSend(`Stopped previous process via process.kill: ${runningProcess.pid}`);
+            } catch (error) {
+                logSend(`Failed to stop previous process via process.kill: ${error.message} ${runningProcess}`);
             };
         };
     } else {
@@ -385,13 +385,13 @@ const autoRestart = () => {
         logSend(`Scheduled restart in ${Math.floor(timeUntilRestart / 1000 / 60)} minutes.`);
         restartScheduled = true;
     
-        setTimeout(() => {
+        setTimeout(async () => {
             if (options.dailyrestart_quickpull) {
                 logSend(`Quick-pulling before restart.`);
                 executeCommand('git', ['pull'], 'ignore');
             };
             logSend(`Auto-restarting process.`);
-            startProcess();
+            await startProcess();
             restartScheduled = false;
             autoRestart();
         }, timeUntilRestart);
@@ -410,7 +410,7 @@ if (options.webhook_url && options.webhook_url.length > 0) {
     logSend("Logs won't be sent to webhook, as no URL was provided.");
 };
 
-startProcess();
+await startProcess();
 autoRestart();
 
 // function getVersionHash() {
