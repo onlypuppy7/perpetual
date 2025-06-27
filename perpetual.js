@@ -304,7 +304,7 @@ const startProcess = async (purposefulStop) => {
             runningProcess = spawn('bash', ['-c', scriptPath], {
                 stdio: ['inherit', 'pipe', 'pipe'],
                 env: { ...process.env, FORCE_COLOR: 'true' },
-                detached: true,
+                detached: process.platform !== 'win32',
             });
 
             runningProcess.stdout.on('data', (data) => {
