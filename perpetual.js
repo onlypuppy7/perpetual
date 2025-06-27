@@ -222,18 +222,18 @@ const startProcess = (purposefulStop) => {
             try {
                 runningProcess.terminate();
             } catch (error) {
-                logSend(`Failed to stop previous process via .terminate: ${error.message}`);
+                logSend(`Failed to stop previous process via .terminate: ${error.message} ${runningProcess}`);
             };
         } else {
             try {
                 runningProcess.kill('SIGINT');
             } catch (error) {
-                logSend(`Failed to stop previous process via .kill: ${error.message}`);
+                logSend(`Failed to stop previous process via .kill: ${error.message} ${runningProcess}`);
             };
             try {
                 process.kill(-runningProcess.pid, 'SIGINT');
             } catch (error) {
-                logSend(`Failed to stop previous process via process,kill: ${error.message}`);
+                logSend(`Failed to stop previous process via process.kill: ${error.message} ${runningProcess}`);
             };
         };
     } else {
