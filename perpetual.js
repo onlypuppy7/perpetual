@@ -45,6 +45,28 @@ let server_type = process.argv[2].replace("--","");
 
 let passed = config[server_type];
 
+if (!passed) {
+    //join all argv past the first two into a string
+    let process_cmd = process.argv.slice(2).join(" ");
+    let dir = process.cwd();
+
+    //parse dir if cd is used
+    if (process_cmd.includes("cd ")) {
+        console.log("Using custom process command:", process_cmd);
+        //detect via regex if cd is used
+        const cdMatch = process_cmd.match(/cd\s+([^\s]+)\s*&&\s*(.*)/);
+        if (cdMatch) {
+            console.log("Detected 'cd' command in process_cmd:", cdMatch[1]);
+            dir = cdMatch[1];
+        };
+    };
+
+    passed = {
+        process_cmd,
+        dir,
+    };
+};
+
 //this is bad code
 const options = {
     //process
