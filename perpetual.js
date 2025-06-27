@@ -12,6 +12,8 @@ import readline from 'readline';
 //perpetual: logging
 import log from '#coloured-logging';
 import { getTimestamp } from '#misc';
+//perpetual: workers
+import { Worker } from 'node:worker_threads';
 //
 
 let rootDir = import.meta.dirname;
@@ -94,9 +96,14 @@ rl.prompt();
 rl.on('line', (line) => {
     let cmd = line.trim();
     if (cmd === "r" || cmd === "restart") {
-        startProcess();
+        startProcess(true);
     } else if (cmd === "p" || cmd === "pull") {
         executeCommand('git', ['pull']);
+    } else if (cmd === "pr") { // pull and restart
+        executeCommand('git', ['pull']);
+        setTimeout(() => {
+            startProcess(true);
+        }, 1000);
     };
     rl.prompt();
 }).on('close', () => {
@@ -207,76 +214,148 @@ const sendLogsToWebhook = () => {
     webhookInterval = setInterval(sendLogsToWebhook, randomDelay);
 };
 
-const startProcess = () => {
+const startProcess = (purposefulStop) => {
     if (runningProcess) {
         logSend(`Stopping previous process...`);
-        try {
-            runningProcess.kill('SIGINT');
-        } catch (error) {
-            logSend(`Failed to stop previous process via .kill: ${error.message}`);
+        runningProcess.purposefulStop = purposefulStop || false;
+        if (runningProcess.terminate) {
+            try {
+                runningProcess.terminate();
+            } catch (error) {
+                logSend(`Failed to stop previous process via .terminate: ${error.message}`);
+            };
+        } else {
+            try {
+                runningProcess.kill('SIGINT');
+            } catch (error) {
+                logSend(`Failed to stop previous process via .kill: ${error.message}`);
+            };
+            try {
+                process.kill(-runningProcess.pid, 'SIGINT');
+            } catch (error) {
+                logSend(`Failed to stop previous process via process,kill: ${error.message}`);
+            };
         };
-        try {
-            process.kill(-runningProcess.pid, 'SIGINT');
-        } catch (error) {
-            logSend(`Failed to stop previous process via process,kill: ${error.message}`);
-        };
-    };
+    } else {
+        logSend(`Starting process: ${options.process_cmd}`);
 
-    logSend(`Starting process: ${options.process_cmd}`);
+        let useWorkerThreads = true;
+        let isNodeScript = options.process_cmd.startsWith('node ');
+        let scriptPath = options.process_cmd;
+
+        // if (isNodeScript) {
+        //     scriptPath = scriptPath.slice(5).trim();
+        // };
+
+        if (isNodeScript && useWorkerThreads) {
+            // use worker threads for Node.js scripts
+            scriptPath = scriptPath.slice(5).trim();
+            //get the absolute path of the script
+            scriptPath = path.isAbsolute(scriptPath) ? scriptPath : path.join(rootDir, scriptPath);
+            if (!fs.existsSync(scriptPath)) {
+                logSend(`Script file does not exist: ${scriptPath}`);
+                return;
+            };
+            logSend(`Using Worker Threads for script: ${scriptPath}`);
+            runningProcess = new Worker(scriptPath, {
+                workerData: {  },
+                stdout: true,
+                stderr: true,
+            });
+            runningProcess.stdout.on('data', (data) => {
+                const lines = data.toString().split('\n').filter(Boolean);
+                lines.forEach(line => {
+                    const log = `${getTimestamp()} ${line}`;
+                    process.stdout.write(`${log}\n`);
+                    appendLog(log);
+                });
+            });
+            runningProcess.stderr.on('data', (data) => {
+                const lines = data.toString().split('\n').filter(Boolean);
+                lines.forEach(line => {
+                    const log = `${getTimestamp()} ERROR: ${line}`;
+                    process.stderr.write(`${log}\n`);
+                    appendLog(log);
+                });
+            });
+            runningProcess.on('error', (err) => {
+                const log = `${getTimestamp()} ERROR: ${err.message}`;
+                process.stderr.write(`${log}\n`); // color and timestamp
+                appendLog(log);
+            });
+            runningProcess.on('exit', (code, signal) => {
+                code = code == 57 ? 1337 : code; // 1337%256 = 57
+                if (signal === 'SIGINT') {
+                    logSend(`Process terminated manually.`);
+                    return;
+                };
+                let pingUser = options.webhook_ping_user ? ` <@${options.webhook_ping_user}>` : "";
+                let pingRole = options.webhook_ping_role ? ` <@&${options.webhook_ping_role}>` : "";
+                logSend(`Process exited with code ${code}, signal ${signal}. ${(code == 1337 || runningProcess.purposefulStop) ? "No ping, intended restart" : `Restarting...${pingUser}${pingRole}`}`);
+
+                setTimeout(() => {
+                    runningProcess = null;
+                    startProcess();
+                }, (code == 1337 || runningProcess.purposefulStop) ? 1e3 : 5e3);
+            });
+        } else {
+            runningProcess = spawn('bash', ['-c', scriptPath], {
+                stdio: ['inherit', 'pipe', 'pipe'],
+                env: { ...process.env, FORCE_COLOR: 'true' },
+                // detached: true,
+            });
+
+            runningProcess.stdout.on('data', (data) => {
+                const lines = data.toString().split('\n').filter(Boolean);
+                lines.forEach(line => {
+                    const log = `${getTimestamp()} ${line}`;
+                    process.stdout.write(`${log}\n`); // color and timestamp
+                    appendLog(log);
+                });
+            });
+
+            runningProcess.stderr.on('data', (data) => {
+                const lines = data.toString().split('\n').filter(Boolean);
+                lines.forEach(line => {
+                    const log = `${getTimestamp()} ERROR: ${line}`;
+                    process.stderr.write(`${log}\n`); // color and timestamp
+                    appendLog(log);
+                });
+            });
+
+            function onExit(code, signal) {
+                code = code == 57 ? 1337 : code; // 1337%256 = 57
+
+                if (signal === 'SIGINT') {
+                    logSend(`Process terminated manually.`);
+                    return;
+                };
+
+                let pingUser = options.webhook_ping_user ? ` <@${options.webhook_ping_user}>` : "";
+                let pingRole = options.webhook_ping_role ? ` <@&${options.webhook_ping_role}>` : "";
+                logSend(`Process exited with code ${code}. ${code == 1337 ? "No ping, intended restart" : `Restarting...${pingUser}${pingRole}`}`);
+                setTimeout(() => {
+                    runningProcess = null;
+                    startProcess();
+                }, code == 1337 ? 1e3 : 5e3);
+            };
+
+            runningProcess.on('exit', (code, signal) => {
+                onExit(code, signal);
+            });
+        };
     
-    runningProcess = spawn('bash', ['-c', options.process_cmd], {
-        stdio: ['inherit', 'pipe', 'pipe'],
-        env: { ...process.env, FORCE_COLOR: 'true' },
-        // detached: true,
-    });
 
-    runningProcess.stdout.on('data', (data) => {
-        const lines = data.toString().split('\n').filter(Boolean);
-        lines.forEach(line => {
-            const log = `${getTimestamp()} ${line}`;
-            process.stdout.write(`${log}\n`); // color and timestamp
-            appendLog(log);
-        });
-    });
+        // runningProcess.on('error', (err) => {
+        //     console.error(`Failed to start process:`, err);
+        //     onExit(1, 'SIGINT');
+        // });
 
-    runningProcess.stderr.on('data', (data) => {
-        const lines = data.toString().split('\n').filter(Boolean);
-        lines.forEach(line => {
-            const log = `${getTimestamp()} ERROR: ${line}`;
-            process.stderr.write(`${log}\n`); // color and timestamp
-            appendLog(log);
-        });
-    });
-
-    function onExit(code, signal) {
-        code = code == 57 ? 1337 : code; // 1337%256 = 57
-
-        if (signal === 'SIGINT') {
-            logSend(`Process terminated manually.`);
-            return;
-        };
-
-        let pingUser = options.webhook_ping_user ? ` <@${options.webhook_ping_user}>` : "";
-        let pingRole = options.webhook_ping_role ? ` <@&${options.webhook_ping_role}>` : "";
-        logSend(`Process exited with code ${code}. ${code == 1337 ? "No ping, intended restart" : `Restarting...${pingUser}${pingRole}`}`);
-        setTimeout(() => {
-            startProcess();
-        }, code == 1337 ? 1e3 : 5e3);
+        // runningProcess.on('close', (code) => {
+        //     logSend(`Process closed with code ${code}.`);
+        //     onExit(code, 'SIGINT');
+        // });
     };
-
-    runningProcess.on('exit', (code, signal) => {
-        onExit(code, signal);
-    });
-
-    // runningProcess.on('error', (err) => {
-    //     console.error(`Failed to start process:`, err);
-    //     onExit(1, 'SIGINT');
-    // });
-
-    // runningProcess.on('close', (code) => {
-    //     logSend(`Process closed with code ${code}.`);
-    //     onExit(code, 'SIGINT');
-    // });
 };
 
 const autoRestart = () => {
