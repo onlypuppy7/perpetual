@@ -227,11 +227,13 @@ const startProcess = (purposefulStop) => {
         } else {
             try {
                 runningProcess.kill('SIGINT');
+                logSend(`Stopped previous process via .kill: ${runningProcess.pid}`);
             } catch (error) {
                 logSend(`Failed to stop previous process via .kill: ${error.message} ${runningProcess}`);
             };
             try {
                 process.kill(-runningProcess.pid, 'SIGINT');
+                logSend(`Stopped previous process via process.kill: ${runningProcess.pid}`);
             } catch (error) {
                 logSend(`Failed to stop previous process via process.kill: ${error.message} ${runningProcess}`);
             };
@@ -326,10 +328,10 @@ const startProcess = (purposefulStop) => {
             function onExit(code, signal) {
                 code = code == 57 ? 1337 : code; // 1337%256 = 57
 
-                if (signal === 'SIGINT') {
-                    logSend(`Process terminated manually.`);
-                    return;
-                };
+                // if (signal === 'SIGINT') {
+                //     logSend(`Process terminated manually.`);
+                //     return;
+                // };
 
                 let pingUser = options.webhook_ping_user ? ` <@${options.webhook_ping_user}>` : "";
                 let pingRole = options.webhook_ping_role ? ` <@&${options.webhook_ping_role}>` : "";
@@ -337,7 +339,7 @@ const startProcess = (purposefulStop) => {
                 setTimeout(() => {
                     runningProcess = null;
                     startProcess();
-                }, code == 1337 ? 1e3 : 5e3);
+                }, (code == 1337 || signal === 'SIGINT') ? 1e3 : 5e3);
             };
 
             runningProcess.on('exit', (code, signal) => {
