@@ -125,7 +125,7 @@ rl.on('line', async (line) => {
         executeCommand('git', ['pull']);
         setTimeout(() => {
             startProcess(true);
-        }, 1000);
+        }, 5e3);
     };
     rl.prompt();
 }).on('close', () => {
