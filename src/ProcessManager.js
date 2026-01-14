@@ -12,6 +12,7 @@ export class ProcessManager {
 
         this.runningProcess = null;
         this.restartScheduled = false;
+        this.autoRestart();
     }
 
     async startProcess(purposefulStop = false) {
@@ -148,13 +149,20 @@ export class ProcessManager {
             return;
         }
 
-        const now = new Date();
-        const [hour, minute] = this.options.dailyrestart_time.split(':').map(Number);
-        const nextRestart = new Date();
-        nextRestart.setHours(hour, minute, 0, 0);
-        if (nextRestart < now) nextRestart.setDate(nextRestart.getDate() + 1);
+        const restartTimes = Array.isArray(this.options.dailyrestart_time) ? this.options.dailyrestart_time : [this.options.dailyrestart_time];
+        let earliestTime = null;
+        for (const timeStr of restartTimes) {
+            const [hour, minute] = timeStr.split(':').map(Number);
+            const now = new Date();
+            const restartTime = new Date();
+            restartTime.setHours(hour, minute, 0, 0);
+            if (restartTime < now) restartTime.setDate(restartTime.getDate() + 1);
+            if (!earliestTime || restartTime < earliestTime) {
+                earliestTime = restartTime;
+            }
+        }
 
-        let timeUntilRestart = nextRestart - now;
+        let timeUntilRestart = earliestTime - new Date();
         if (timeUntilRestart <= 0) timeUntilRestart += 24*60*60*1000;
 
         this.logger.logSend(`Scheduled restart in ${Math.floor(timeUntilRestart / 1000 / 60)} minutes.`);
