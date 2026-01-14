@@ -1,4 +1,4 @@
-import log from '#coloured-logging';
+import log from 'puppylog';
 
 (async () => {
     let count = 0;
