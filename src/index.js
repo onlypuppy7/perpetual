@@ -14,7 +14,6 @@ export class Perpetual {
     }
 
     async run() {
-        if (this.options.webhook_url) this.logger.startWebhookInterval();
         await this.processManager.startProcess();
 
         const rl = readline.createInterface({

@@ -1,7 +1,7 @@
 {
     "name": "puppyperpetual",
     "type": "module",
-    "version": "v1.0.1",
+    "version": "v1.0.2",
     "description": "Run stuff FOREVER! PERPETUALLY!",
     "main": "perpetual.js",
     "keywords": [
