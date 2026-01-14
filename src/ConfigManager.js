@@ -3,15 +3,19 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 
 export class ConfigManager {
-    constructor(rootDir, serverName) {
+    constructor(rootDir, serverName, noYAML = false) {
         this.rootDir = rootDir;
         this.serverName = serverName;
 
-        this.defaultConfigPath = path.join(rootDir, 'src', 'defaultconfig.yaml');
+        this.defaultConfigPath = path.join('src', 'defaultconfig.yaml');
         this.configPath = path.join(rootDir, 'store', 'config.yaml');
 
-        this.ensureConfigExists();
-        this.config = yaml.load(fs.readFileSync(this.configPath, 'utf8'));
+        if (!noYAML) {
+            this.ensureConfigExists();
+            this.config = yaml.load(fs.readFileSync(this.configPath, 'utf8'));
+        } else {
+            this.config = { servers: {}, pullers: []  };
+        }
     }
 
     ensureConfigExists() {

@@ -1,9 +1,12 @@
 {
     "name": "puppyperpetual",
     "type": "module",
-    "version": "1.0.3",
+    "version": "1.0.6",
     "description": "Run stuff FOREVER! PERPETUALLY!",
-    "main": "perpetual.js",
+    "main": "./src/index.js",
+    "exports": {
+        ".": "./src/index.js"
+    },
     "keywords": [
         "perpetual",
         "process-manager",
