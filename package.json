@@ -1,7 +1,8 @@
 {
     "name": "puppyperpetual",
     "type": "module",
-    "version": "1.0.6",
+    "types": "./src/index.d.ts",
+    "version": "1.1.0",
     "description": "Run stuff FOREVER! PERPETUALLY!",
     "main": "./src/index.js",
     "exports": {

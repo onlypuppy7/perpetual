@@ -1,4 +1,4 @@
-import Perpetual from '../index.js';
+import Perpetual from 'puppyperpetual';
 
 const perpetual = new Perpetual('test_process', {
     // process_cmd: 'node ./src/test/test_process.js',
