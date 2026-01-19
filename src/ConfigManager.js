@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
-    import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'url';
 
 export class ConfigManager {
-    constructor(rootDir, serverName, noYAML = false) {
+    constructor(rootDir, perpConfigLocation = path.join('store', 'config.yaml'), serverName, noYAML = false) {
         this.rootDir = rootDir;
         this.serverName = serverName;
 
@@ -12,7 +12,7 @@ export class ConfigManager {
         const __dirname = path.dirname(__filename);
 
         this.defaultConfigPath = path.join(__dirname, 'defaultconfig.yaml');
-        this.configPath = path.join(rootDir, 'store', 'config.yaml');
+        this.configPath = path.join(this.rootDir, perpConfigLocation);
 
         if (!noYAML) {
             this.ensureConfigExists();
@@ -31,10 +31,10 @@ export class ConfigManager {
 
     getServerOptions(options) {
         let passed = options || {};
-        Object.apply(passed, this.config.servers?.[this.serverName] || {});
+        Object.assign(passed, this.config?.[this.serverName] || {});
 
         if (!passed.dir) {
-            if (passed.process_cmd.includes("cd ")) {
+            if (passed.process_cmd?.includes("cd ")) {
                 console.log("Using custom process command:", passed.process_cmd);
                 //detect via regex if cd is used
                 const cdMatch = passed.process_cmd.match(/cd\s+([^\s]+)\s*&&\s*(.*)/);
@@ -46,6 +46,7 @@ export class ConfigManager {
         }
 
         return {
+            ...passed,
             //process
             process_cmd:            passed.process_cmd              || "idk lol",
             dir:                    passed.dir                      || "",

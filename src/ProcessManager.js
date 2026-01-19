@@ -45,12 +45,12 @@ export class ProcessManager {
             this.logger.logSend(`Starting process: ${this.options.process_cmd}`);
 
             const useWorkerThreads = true;
-            const isNodeScript = this.options.process_cmd.startsWith('node ');
+            const isNodeScript = this.options.process_cmd.startsWith('node ') || this.options.isNode;
             let scriptPath = this.options.process_cmd;
 
             if (isNodeScript && useWorkerThreads) {
                 // Use Worker Threads for Node.js scripts
-                scriptPath = scriptPath.slice(5).trim();
+                scriptPath = scriptPath.replace(/^node\s+/, '').trim();
                 scriptPath = path.isAbsolute(scriptPath) ? scriptPath : path.join(this.rootDir, scriptPath);
 
                 if (!fs.existsSync(scriptPath)) {

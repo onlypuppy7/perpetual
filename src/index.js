@@ -5,12 +5,12 @@ import { ProcessManager } from './ProcessManager.js';
 import readline from 'node:readline';
 
 export class Perpetual {
-    constructor(serverName, options) {
-        const rootDir = options.rootDir || path.resolve('./');
-        this.configManager = new ConfigManager(rootDir, serverName, options.noYAML);
+    constructor(serverName, options = {}) {
+        this.rootDir = options.rootDir || path.resolve('./');
+        this.configManager = new ConfigManager(this.rootDir, options.perpConfigLocation, serverName, options.noYAML);
         this.options = this.configManager.getServerOptions(options);
         this.logger = new Logger(this.options);
-        this.processManager = new ProcessManager(this.options, this.logger, rootDir);
+        this.processManager = new ProcessManager(this.options, this.logger, this.rootDir);
     }
 
     async run() {
