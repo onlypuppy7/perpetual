@@ -2,7 +2,7 @@
     "name": "puppyperpetual",
     "type": "module",
     "types": "./src/index.d.ts",
-    "version": "1.1.0",
+    "version": "1.1.2",
     "description": "Run stuff FOREVER! PERPETUALLY!",
     "main": "./src/index.js",
     "exports": {
@@ -19,13 +19,13 @@
     "license": "MIT",
     "scripts": {
         "start": "node perpetual.js",
-        "test": "node src/test/test.js"
+        "test": "node src/tests/test.js"
     },
     "dependencies": {
-        "chalk": "^5.3.0",
-        "js-yaml": "^4.1.0",
-        "puppylog": "^1.0.5",
-        "puppymisc": "^1.0.4",
-        "puppywebhook": "^1.0.1"
+        "chalk": "^5.6.2",
+        "js-yaml": "^4.1.1",
+        "puppylog": "^1.2.0",
+        "puppymisc": "^1.1.1",
+        "puppywebhook": "^1.1.1"
     }
 }

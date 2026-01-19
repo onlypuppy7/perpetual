@@ -1,13 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
+    import { fileURLToPath } from 'url';
 
 export class ConfigManager {
     constructor(rootDir, serverName, noYAML = false) {
         this.rootDir = rootDir;
         this.serverName = serverName;
 
-        this.defaultConfigPath = path.join('src', 'defaultconfig.yaml');
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+
+        this.defaultConfigPath = path.join(__dirname, 'defaultconfig.yaml');
         this.configPath = path.join(rootDir, 'store', 'config.yaml');
 
         if (!noYAML) {
