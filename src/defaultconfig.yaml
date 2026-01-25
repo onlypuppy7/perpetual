@@ -18,6 +18,6 @@ default: #example
   #webhook logging
   webhook_url: "" #empty disables it
   webhook_username: "Test!"
-  webhook_avatar: "https://cdn.onlypuppy7.online/legacyshell/client.png"
+  webhook_avatar: "https://cdn.onlypuppy7.org/legacyshell/client.png"
   webhook_ping_user: "514778439018872842" #ENTER THE USER ID. for when there is an error. empty = no ping.
   webhook_ping_role: "1221557010651418705" #ENTER THE ROLE ID. for when there is an error. empty = no ping.

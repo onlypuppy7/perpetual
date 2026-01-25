@@ -60,7 +60,7 @@ export class ConfigManager {
             //webhook logging
             webhook_url:            passed.webhook_url              || "", //false or empty is disabled
             webhook_username:       passed.webhook_username         || "Webhook", //eg "LegacyShell: Client Server"
-            webhook_avatar:         passed.webhook_avatar           || "https://cdn.onlypuppy7.online/legacyshell/client.png", //eg "https://cdn.onlypuppy7.online/legacyshell/client.png"
+            webhook_avatar:         passed.webhook_avatar           || "https://cdn.onlypuppy7.org/legacyshell/client.png", //eg "https://cdn.onlypuppy7.org/legacyshell/client.png"
             webhook_ping_user:      passed.webhook_ping_user        || false, //this might flood your shit
             webhook_ping_role:      passed.webhook_ping_role        || false, //this might flood EVERYONE'S shit
             //pulling
