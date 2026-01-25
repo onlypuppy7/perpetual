@@ -2,7 +2,7 @@
     "name": "puppyperpetual",
     "type": "module",
     "types": "./src/index.d.ts",
-    "version": "1.1.5",
+    "version": "1.2.0",
     "description": "Run stuff FOREVER! PERPETUALLY!",
     "main": "./src/index.js",
     "exports": {
@@ -24,6 +24,7 @@
     "dependencies": {
         "chalk": "^5.6.2",
         "js-yaml": "^4.1.1",
+        "node-pty": "^1.1.0",
         "puppylog": "^1.2.0",
         "puppymisc": "^1.1.1",
         "puppywebhook": "^1.1.1"

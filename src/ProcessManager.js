@@ -44,7 +44,7 @@ export class ProcessManager {
         } else {
             this.logger.logSend(`Starting process: ${this.options.process_cmd}`);
 
-            const useWorkerThreads = true;
+            const useWorkerThreads = this.options.useWorkerThreads ?? false;
             const isNodeScript = this.options.process_cmd.startsWith('node ') || this.options.isNode;
             let scriptPath = this.options.process_cmd;
 
@@ -104,14 +104,19 @@ export class ProcessManager {
                 });
 
             } else {
-                this.runningProcess = spawn('bash', ['-c', scriptPath], {
+                this.runningProcess = spawn('bash', ['-c', 'export FORCE_COLOR=3; ' + scriptPath], {
                     stdio: ['inherit', 'pipe', 'pipe'],
-                    env: { ...process.env, FORCE_COLOR: 'true' },
+                    env: { ...process.env },
                     detached: process.platform !== 'win32',
                 });
 
                 const handleOutput = (data, isError = false) => {
                     const lines = data.toString().split('\n').filter(Boolean);
+                    const logRaw = (data, label) => {
+                        const hex = Buffer.from(data).toString('hex').match(/.{1,2}/g).join(' ');
+                        console.log(`[RAW ${label}]`, hex);
+                    };
+                    // logRaw(data, isError ? 'STDERR' : 'STDOUT');
                     lines.forEach(line => {
                         const logLine = `${getTimestamp()}${isError ? " ERROR:" : ""} ${line}`;
                         if (isError) process.stderr.write(`${logLine}\n`);
