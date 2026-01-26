@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { spawn, exec } from 'node:child_process';
 import { Worker } from 'node:worker_threads';
 import { getTimestamp } from 'puppymisc';
 
@@ -27,6 +27,15 @@ export class ProcessManager {
                     this.logger.logSend(`Failed to stop previous process via .terminate: ${err.message} ${this.runningProcess}`);
                 }
             } else {
+                // if (process.platform === 'win32') {
+                //     try {
+                //         exec(`taskkill /pid ${this.runningProcess.pid} /T /F`);
+                //         this.logger.logSend(`Stopped previous process via taskkill: ${this.runningProcess.pid}`);
+                //     } catch (error) {
+                //         this.logger.logSend(`Failed to stop previous process via taskkill: ${error.message} ${this.runningProcess}`);   
+                //     }
+                // }
+
                 try {
                     this.runningProcess.kill('SIGINT');
                     this.logger.logSend(`Stopped previous process via .kill: ${this.runningProcess.pid}`);
@@ -45,7 +54,7 @@ export class ProcessManager {
             this.logger.logSend(`Starting process: ${this.options.process_cmd}`);
 
             const useWorkerThreads = this.options.useWorkerThreads ?? false;
-            const isNodeScript = this.options.process_cmd.startsWith('node ') || this.options.isNode;
+            const isNodeScript = this.options.process_cmd.startsWith('node ') || this.options.isNodeScript;
             let scriptPath = this.options.process_cmd;
 
             if (isNodeScript && useWorkerThreads) {
@@ -88,14 +97,14 @@ export class ProcessManager {
                 this.runningProcess.on('exit', (code, signal) => {
                     code = code === 57 ? 1337 : code;
                     if (signal === 'SIGINT') {
-                        this.logger.logSend(`Process terminated manually.`);
+                        this.logger.logSend(`Worker process terminated manually.`);
                         return;
                     }
 
                     const pingUser = this.options.webhook_ping_user ? ` <@${this.options.webhook_ping_user}>` : "";
                     const pingRole = this.options.webhook_ping_role ? ` <@&${this.options.webhook_ping_role}>` : "";
 
-                    this.logger.logSend(`Process exited with code ${code}, signal ${signal}. ${(code === 1337 || this.runningProcess.purposefulStop) ? "No ping, intended restart" : `Restarting...${pingUser}${pingRole}`}`);
+                    this.logger.logSend(`Worker process exited with code ${code}, signal ${signal}. ${(code === 1337 || this.runningProcess.purposefulStop) ? "No ping, intended restart" : `Restarting...${pingUser}${pingRole}`}`);
 
                     setTimeout(() => {
                         this.runningProcess = null;
@@ -104,9 +113,19 @@ export class ProcessManager {
                 });
 
             } else {
-                this.runningProcess = spawn('bash', ['-c', 'export FORCE_COLOR=3; ' + scriptPath], {
+                let bash = 'bash';
+                let options = ['-c', 'export FORCE_COLOR=3; exec ' + scriptPath];
+                if (process.platform === 'win32') {
+                    bash = this.options.winBashPath || 'C:\\Program Files\\Git\\bin\\bash.exe';
+                    if (isNodeScript) {
+                        bash = 'node';
+                        options = scriptPath.replace(/^node\s+/, '').trim().split(' ');
+                        // options.push("FORCE_COLOR=3");
+                    }
+                }
+                this.runningProcess = spawn(bash, options, {
                     stdio: ['inherit', 'pipe', 'pipe'],
-                    env: { ...process.env },
+                    env: { ...process.env, FORCE_COLOR: '3' },
                     detached: process.platform !== 'win32',
                 });
 

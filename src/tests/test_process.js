@@ -4,6 +4,7 @@ import log from 'puppylog';
 console.log('FORCE_COLOR:', process.env.FORCE_COLOR);
 console.log('isTTY', process.stdout.isTTY);
 console.log('raw green:', '\x1b[1;32mGREEN\x1b[0m');
+console.log("directory:", process.cwd());
 
 (async () => {
     let count = 0;

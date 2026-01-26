@@ -45,7 +45,7 @@ export class ConfigManager {
             };
         }
 
-        return {
+        passed = {
             ...passed,
             //process
             process_cmd:            passed.process_cmd              || "idk lol",
@@ -66,5 +66,10 @@ export class ConfigManager {
             //pulling
             is_puller:              this.config.pullers?.includes(this.serverName) || false,
         };
+
+        if (passed.process_cmd_prefix) passed.process_cmd = `${passed.process_cmd_prefix}${passed.process_cmd}`;
+        if (passed.process_cmd_suffix) passed.process_cmd = `${passed.process_cmd}${passed.process_cmd_suffix}`;
+
+        return passed;
     }
 }
