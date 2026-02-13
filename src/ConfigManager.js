@@ -41,7 +41,7 @@ export class ConfigManager {
                 if (cdMatch) {
                     console.log("Detected 'cd' command in process_cmd:", cdMatch[1]);
                     passed.dir = cdMatch[1];
-                    passed.process_cmd = cdMatch[2];
+                    // passed.process_cmd = cdMatch[2];
                 };
             };
         }
