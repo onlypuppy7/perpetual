@@ -114,7 +114,7 @@ export class ProcessManager {
 
             } else {
                 let bash = 'bash';
-                let options = ['-c', 'export FORCE_COLOR=3; exec ' + scriptPath];
+                let options = ['-c', 'export FORCE_COLOR=3;' + this.options.process_cmd];
                 if (process.platform === 'win32') {
                     bash = this.options.winBashPath || 'C:\\Program Files\\Git\\bin\\bash.exe';
                     if (isNodeScript) {
