@@ -12,7 +12,7 @@ export class ConfigManager {
         const __dirname = path.dirname(__filename);
 
         this.defaultConfigPath = path.join(__dirname, 'defaultconfig.yaml');
-        this.configPath = path.join(this.rootDir, perpConfigLocation);
+        this.configPath = path.join(perpConfigLocation);
 
         if (!noYAML) {
             this.ensureConfigExists();
@@ -57,7 +57,7 @@ export class ConfigManager {
             dailyrestart_quickpull: passed.dailyrestart_quickpull,
             //file logging
             logfile_enable:         passed.logfile_enable,
-            logfile_location:       passed.logfile_location         || path.join(this.rootDir, "store", "logs", this.serverName), //no editing kek
+            logfile_location:       passed.logfile_location         || path.join("store", "logs", this.serverName), //no editing kek
             //webhook logging
             webhook_url:            passed.webhook_url              || "", //false or empty is disabled
             webhook_username:       passed.webhook_username         || "Webhook", //eg "LegacyShell: Client Server"
@@ -66,6 +66,7 @@ export class ConfigManager {
             webhook_ping_role:      passed.webhook_ping_role        || false, //this might flood EVERYONE'S shit
             //pulling
             is_puller:              this.config.pullers?.includes(this.serverName) || false,
+            restart_on_update:      passed.restart_on_update        ?? true,
         };
 
         if (passed.process_cmd_prefix) passed.process_cmd = `${passed.process_cmd_prefix}${passed.process_cmd}`;

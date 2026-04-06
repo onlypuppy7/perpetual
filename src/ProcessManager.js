@@ -13,6 +13,7 @@ export class ProcessManager {
         this.runningProcess = null;
         this.restartScheduled = false;
         this.autoRestart();
+        this.pullerSetup();
     }
 
     async startProcess(purposefulStop = false) {
@@ -116,11 +117,18 @@ export class ProcessManager {
                 let bash = 'bash';
                 let options = ['-c', 'export FORCE_COLOR=3;' + this.options.process_cmd];
                 if (process.platform === 'win32') {
-                    bash = this.options.winBashPath || 'C:\\Program Files\\Git\\bin\\bash.exe';
+                    // bash = this.options.winBashPath || 'C:\\Program Files\\Git\\bin\\bash.exe';
                     if (isNodeScript) {
                         bash = 'node';
                         options = scriptPath.replace(/^node\s+/, '').trim().split(' ');
                         // options.push("FORCE_COLOR=3");
+                    } else {
+                        //check if bash exists at the specified path
+                        bash = this.options.winBashPath || 'C:\\Program Files\\Git\\bin\\bash.exe';
+                        if (!fs.existsSync(bash)) {
+                            bash = 'cmd.exe';
+                            options = ['/c', this.options.process_cmd];
+                        }
                     }
                 }
                 this.runningProcess = spawn(bash, options, {
@@ -166,7 +174,32 @@ export class ProcessManager {
         }
     }
 
-    autoRestart() {
+    async gitPull() {
+        this.logger.logSend("Performing git pull...");
+        this.executeCommand('git', ['pull'], 'ignore');
+    }
+
+    async getGitHash() {
+        return new Promise((resolve) => {
+            const gitProcess = spawn('git', ['rev-parse', 'HEAD'], { cwd: this.options.dir || process.cwd() });
+            let hash = '';
+
+            gitProcess.stdout.on('data', (data) => {
+                hash += data.toString();
+            });
+
+            gitProcess.on('close', (code) => {
+                if (code === 0) {
+                    resolve(hash.trim());
+                } else {
+                    this.logger.logSend(`git rev-parse exited with code ${code}`);
+                    resolve(null);
+                }
+            });
+        });
+    }
+
+    async autoRestart() {
         if (!this.options.dailyrestart_enable) return;
         if (this.restartScheduled) {
             this.logger.logSend("Restart already scheduled.");
@@ -194,14 +227,28 @@ export class ProcessManager {
 
         setTimeout(async () => {
             if (this.options.dailyrestart_quickpull) {
-                this.logger.logSend("Quick-pulling before restart.");
-                this.executeCommand('git', ['pull'], 'ignore');
+                await this.gitPull();
             }
             this.logger.logSend("Auto-restarting process.");
             await this.startProcess();
             this.restartScheduled = false;
             this.autoRestart();
         }, timeUntilRestart);
+    }
+
+    async pullerSetup() {
+        this.currentHash = await this.getGitHash();
+        setInterval(async () => {
+            if (this.options.is_puller) {
+                await this.gitPull();
+            }
+            const newHash = await this.getGitHash();
+            if (newHash && newHash !== this.currentHash && this.config.restart_on_update) {
+                this.logger.logSend(`Git hash changed from ${this.currentHash} to ${newHash}. Restarting process.`);
+                this.currentHash = newHash;
+                await this.startProcess();
+            }
+        }, 60e3);
     }
 
     executeCommand(command, args, stdio = "inherit") {
