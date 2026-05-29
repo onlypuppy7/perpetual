@@ -175,8 +175,8 @@ export class ProcessManager {
     }
 
     async gitPull() {
-        this.logger.logSend("Performing git pull...");
-        this.executeCommand('git', ['pull'], 'ignore');
+        // this.logger.logSend("Performing git pull...");
+        await this.executeCommand('git', ['pull'], 'ignore');
     }
 
     async getGitHash() {
@@ -243,7 +243,7 @@ export class ProcessManager {
                 await this.gitPull();
             }
             const newHash = await this.getGitHash();
-            if (newHash && newHash !== this.currentHash && this.config.restart_on_update) {
+            if (newHash && newHash !== this.currentHash && this.options.restart_on_update) {
                 this.logger.logSend(`Git hash changed from ${this.currentHash} to ${newHash}. Restarting process.`);
                 this.currentHash = newHash;
                 await this.startProcess();
@@ -252,21 +252,32 @@ export class ProcessManager {
     }
 
     executeCommand(command, args, stdio = "inherit") {
-        let dir = this.options.dir || "";
+        const dir = this.options.dir || "";
 
         console.log(dir, this.options.dir);
 
-        const cmdProcess = spawn(command, args, {
-            stdio,
-            cwd: this.options.dir && this.options.dir !== "" && dir,
-        });
-    
-        cmdProcess.on('exit', (code) => {
-            if (stdio !== 'ignore') console.log(`${command} exited with code: ${code}`);
-        });
-    
-        cmdProcess.on('error', (err) => {
-            console.error(`Failed to start ${command}:`, err);
+        return new Promise((resolve, reject) => {
+            const cmdProcess = spawn(command, args, {
+                stdio,
+                cwd: this.options.dir && this.options.dir !== "" ? dir : undefined,
+            });
+
+            cmdProcess.on("exit", (code) => {
+                if (stdio !== "ignore") {
+                    console.log(`${command} exited with code: ${code}`);
+                }
+
+                if (code === 0) {
+                    resolve(code);
+                } else {
+                    reject(new Error(`${command} exited with code ${code}`));
+                }
+            });
+
+            cmdProcess.on("error", (err) => {
+                console.error(`Failed to start ${command}:`, err);
+                reject(err);
+            });
         });
     }
 }
