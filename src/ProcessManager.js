@@ -267,16 +267,15 @@ export class ProcessManager {
                     console.log(`${command} exited with code: ${code}`);
                 }
 
-                if (code === 0) {
-                    resolve(code);
-                } else {
-                    reject(new Error(`${command} exited with code ${code}`));
+                if (code !== 0) {
+                    this.logger.logSend(`ERR: ${command} exited with code ${code}`);
                 }
+                resolve(code);
             });
 
             cmdProcess.on("error", (err) => {
-                console.error(`Failed to start ${command}:`, err);
-                reject(err);
+                this.logger.logSend(`ERR: Failed to start ${command}: ${err.message}`);
+                resolve(err);
             });
         });
     }
